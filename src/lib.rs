@@ -1,6 +1,6 @@
 use std::error::Error;
-use std::sync::{Arc, mpsc, Mutex};
 use std::sync::mpsc::Receiver;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::thread::{JoinHandle, Thread};
 
@@ -19,7 +19,7 @@ impl ThreadPool {
         assert!(size > 0);
 
         let (sender, receiver) = mpsc::channel();
-        let receiver =Arc::new(Mutex::new(receiver));
+        let receiver = Arc::new(Mutex::new(receiver));
 
         let mut workers = Vec::with_capacity(size);
         for id in 0..size {
@@ -27,11 +27,16 @@ impl ThreadPool {
             let worker = Worker::new(id, Arc::clone(&receiver));
             workers.push(worker);
         }
-        ThreadPool { workers, sender: Some(sender) }
+        ThreadPool {
+            workers,
+            sender: Some(sender),
+        }
     }
 
-
-    pub fn execute<F>(&self, f:F) where F: FnOnce() + Send + 'static {
+    pub fn execute<F>(&self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
         let job = Box::new(f);
         // send job to sender of the Thread pool
         self.sender.as_ref().unwrap().send(job).unwrap();
@@ -59,7 +64,6 @@ struct Worker {
 impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-
             let message = receiver.lock().unwrap().recv();
 
             match message {
@@ -77,7 +81,10 @@ impl Worker {
             }
         });
 
-        Worker { id, thread: Some(thread) }
+        Worker {
+            id,
+            thread: Some(thread),
+        }
     }
 }
 

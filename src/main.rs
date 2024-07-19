@@ -1,14 +1,14 @@
-use std::{fs, thread};
+use hello_web::ThreadPool;
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::time::Duration;
-use hello_web::ThreadPool;
+use std::{fs, thread};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);
     for stream in listener.incoming().take(2) {
-        let stream  = stream.unwrap();
+        let stream = stream.unwrap();
 
         pool.execute(|| {
             handle_connection(stream);
@@ -32,8 +32,7 @@ fn handle_connection(mut stream: TcpStream) {
     let contents = fs::read_to_string(filename).unwrap();
     let length = contents.len();
 
-    let response =
-        format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
 
     stream.write_all(response.as_bytes()).unwrap();
 }
